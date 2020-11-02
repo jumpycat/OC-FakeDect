@@ -15,6 +15,7 @@ from tqdm import tqdm
 from scipy.interpolate import interp1d
 from sklearn.metrics import confusion_matrix, accuracy_score, mean_squared_error, mean_absolute_error, classification_report, roc_curve, roc_auc_score
 from torch.utils.data import DataLoader
+from torchsummary import summary
 
 batch_size = 128
 epochs = 2000
@@ -107,14 +108,10 @@ class VAE_CNN(nn.Module):
             16, 3, kernel_size=3, stride=2, padding=1, output_padding=1, bias=False)
 
     def encode(self, x):
-        c1 = self.bn1(self.conv1(x))
-        conv1 = self.relu(c1)
-        c2 = self.bn2(self.conv2(conv1))
-        conv2 = self.relu(c2)
-        c3 = self.bn3(self.conv3(conv2))
-        conv3 = self.relu(c3)
-        c4= self.bn4(self.conv4(conv3))
-        conv4 = self.relu(c4)
+        conv1 = self.relu(self.bn1(self.conv1(x)))
+        conv2 = self.relu(self.bn2(self.conv2(conv1)))
+        conv3 = self.relu(self.bn3(self.conv3(conv2)))
+        conv4 = self.relu(self.bn4(self.conv4(conv3)))
         conv4 = conv4.view(-1, 25 * 25 * 16)
 
         fc1 = self.relu(self.fc_bn1(self.fc1(conv4)))
@@ -128,21 +125,14 @@ class VAE_CNN(nn.Module):
         return eps.mul(std).add_(mu)
 
     def decode(self, z):
-        #print(z.shape)
         fc3 = self.relu(self.fc_bn3(self.fc3(z)))
-        #print(fc3.shape)
         fc4 = self.relu(self.fc_bn4(self.fc4(fc3)))
-        #print(fc4.shape)
         fc4 = fc4.view(-1, 16, 25, 25)
 
         conv5 = self.relu(self.bn5(self.conv5(fc4)))
-        #print(conv5.shape)
         conv6 = self.relu(self.bn6(self.conv6(conv5)))
-        #print(conv6.shape)
         conv7 = self.relu(self.bn7(self.conv7(conv6)))
-        #print(conv7.shape)
         conv8 = self.conv8(conv7)
-        #print(conv8.shape)
         return conv8.view(-1, 3, 100, 100)
 
     def forward(self, x):
@@ -169,6 +159,7 @@ loss_mse = customLoss()
 
 train_losses = []
 
+print(summary(model, (3, 100, 100)))
 
 #ckpt = torch.load("dfdc/vae_pytorch_dfdc_FT_.pt")
 # model.load_state_dict(ckpt)
@@ -184,14 +175,11 @@ for epoch in range(1, epochs + 1):
         data = data.to(device)
         optimizer.zero_grad()
 
-        permute = [2, 1, 0]
-        data = data[:, permute, :, :]
+        #permute = [2, 1, 0]
+        #data = data[:, permute, :, :]
 
         recon_batch, mu, logvar = model(data)
-        #mu1, logvar1 = model.encode(recon_batch)
-        #z1 = model.get_hidden(mu1, logvar1)
 
-        #loss = loss_mse(z, z1, mu, logvar)
         loss = loss_mse(recon_batch, data, mu, logvar)
 
         loss.backward()
