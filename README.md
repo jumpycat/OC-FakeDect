@@ -1,4 +1,4 @@
-# Copied From the Author's Repo
+# Copied from the Author's Repo
 
 [OC-FakeDect: Classifying Deepfakes Using One-Class Variational Autoencoder](https://openaccess.thecvf.com/content_CVPRW_2020/html/w39/Khalid_OC-FakeDect_Classifying_Deepfakes_Using_One-Class_Variational_Autoencoder_CVPRW_2020_paper.html).
 
